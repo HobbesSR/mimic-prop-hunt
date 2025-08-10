@@ -1,0 +1,6 @@
+{
+  "title": "Mimic Hunt",
+  "type": "gamemode",
+  "tags": ["gameplay", "asymmetric"],
+  "ignore": [".git/"]
+}
