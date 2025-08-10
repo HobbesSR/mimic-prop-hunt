@@ -36,7 +36,8 @@ end
 -- When a player presses the USE key (E), send a network message to the server to request a disguise.
 hook.Add("PlayerBindPress", "mh_disguise_key", function(ply, bind, pressed)
     if not pressed then return end
-    if bind ~= "gm_use" then return end -- gm_use is the bind for the USE key
+    -- Detect the USE key; PlayerBindPress passes strings like "+use"
+    if not string.find(bind, "+use", 1, true) then return end
     if ply:Team() ~= TEAM_MIMICS then return end
 
     -- Check if the player is controlling a mimic
