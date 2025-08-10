@@ -49,3 +49,35 @@ You can set these by right-clicking the game in Steam -> Properties -> General -
 *   The player model for mimics is simply replaced. A more robust implementation might use a proper entity parenting or a NextBot-like system.
 *   The logic for assigning players to teams is basic and aims for a 3:1 Hunter-to-Mimic ratio.
 *   No custom sounds or content are included yet.
+
+
+## Single-PC Testing (No Other Players Needed)
+
+These helpers are built into the gamemode to make solo testing easy:
+
+- Enable solo mode to bypass empty-team auto-wins (recommended while alone):
+  - mh_singleplayer_dev 1
+- Bind quick team switches and disguise:
+  - bind j "mh_join_hunters"
+  - bind k "mh_join_mimics"
+  - bind p "mh_disguise"
+- Round control:
+  - mh_restart_round
+- Optional: simulate being “seen” (forces freeze) without a Hunter:
+  - mh_force_seen 1  (turn off with 0)
+
+Suggested flow:
+- Start a Singleplayer game on gm_construct using the Mimic Hunt gamemode
+- Press K to become a Mimic; walk to a prop and press E (or P) to disguise
+- Toggle mh_force_seen 1 to verify the freeze-on-sight behavior; set it back to 0
+- Press J to test Hunter loadout and movement
+
+Tip: For two real clients on one PC, launch a second instance with -multirun, host a local server in one, and join from the other.
+
+## Troubleshooting
+
+- If the HUD/teams don’t look right after switching teams, use mh_restart_round
+- If USE (E) doesn’t trigger disguise, use the P bind or the console command mh_disguise
+- Game not showing the gamemode in the menu? Ensure the folder structure is:
+  - garrysmod/addons/mimic_hunt/addon.json
+  - garrysmod/addons/mimic_hunt/gamemodes/mimic_hunt/
