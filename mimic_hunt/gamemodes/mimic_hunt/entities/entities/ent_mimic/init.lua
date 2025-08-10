@@ -2,6 +2,9 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 
+-- Dev/testing convar: force mimics to be considered "seen"
+local mh_cvar_force_seen = CreateConVar("mh_force_seen", "0", FCVAR_ARCHIVE, "Force mimics to be seen (freeze) for testing")
+
 function ENT:Initialize()
   self:SetModel("models/props_c17/oildrum001.mdl")
   self:PhysicsInit(SOLID_VPHYSICS)
@@ -44,8 +47,8 @@ function ENT:Think()
   end
 
 
-  -- Freeze if seen by any hunter
-  local isSeen = HasLoSToAnyHunter(self)
+  -- Freeze if seen by any hunter (or forced via cvar for single-PC tests)
+  local isSeen = (mh_cvar_force_seen and mh_cvar_force_seen:GetBool()) or HasLoSToAnyHunter(self)
   self:SetSeen(isSeen)
 
   -- If the entity is being controlled by a player, freeze them too.
