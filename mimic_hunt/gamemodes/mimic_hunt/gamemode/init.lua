@@ -2,6 +2,9 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 
+-- Dev/testing convars
+local mh_cvar_singleplayer = CreateConVar("mh_singleplayer_dev", "1", FCVAR_ARCHIVE, "Allow solo testing by disabling empty-team auto win checks")
+
 -- Helper function to get all living players on a team
 local function AlivePlayers(teamid)
   local t = {}
@@ -11,9 +14,49 @@ local function AlivePlayers(teamid)
   return t
 end
 
+-- Simple team switching for testing
+concommand.Add("mh_join_hunters", function(ply)
+  if not IsValid(ply) then return end
+  ply:SetTeam(TEAM_HUNTERS)
+  ply:Spawn()
+  ply:ChatPrint("Joined Hunters")
+end)
+
+concommand.Add("mh_join_mimics", function(ply)
+  if not IsValid(ply) then return end
+  ply:SetTeam(TEAM_MIMICS)
+  ply:Spawn()
+  ply:ChatPrint("Joined Mimics")
+end)
+
+concommand.Add("mh_restart_round", function(ply)
+  if IsValid(ply) and not ply:IsAdmin() then return end
+  if GAMEMODE then GAMEMODE:StartRound() end
+end)
+
+-- Disguise helper so clients can bind a key: `bind p mh_disguise`
+local function MH_DoDisguise(ply)
+  if not IsValid(ply) or ply:Team() ~= TEAM_MIMICS then return end
+  local mimic_ent = ply:GetObserverTarget()
+  if not IsValid(mimic_ent) or mimic_ent:GetClass() ~= "ent_mimic" then
+    mimic_ent = ply
+  end
+  local tr = ply:GetEyeTrace()
+  if IsValid(tr.Entity) and tr.Entity:GetClass() == "prop_physics" and tr.HitPos:DistToSqr(ply:GetShootPos()) < 200*200 then
+    mimic_ent:SetModel(tr.Entity:GetModel())
+    mimic_ent:SetSkin(tr.Entity:GetSkin() or 0)
+    mimic_ent:SetAngles(Angle(0, ply:EyeAngles().y, 0))
+  end
+end
+concommand.Add("mh_disguise", function(ply)
+  MH_DoDisguise(ply)
+end)
+
+
 -- Called when the gamemode is initialized
 function GM:Initialize()
   self.BaseClass.Initialize(self)
+  if self.CreateTeams then self:CreateTeams() end
   self:StartRound()
 end
 
@@ -39,11 +82,20 @@ hook.Add("Think", "mh_round_watch", function()
   local hunters = AlivePlayers(TEAM_HUNTERS)
   local mimics  = AlivePlayers(TEAM_MIMICS)
 
-  if #mimics == 0 then
-    GAMEMODE:EndRound("Hunters")
-  elseif #hunters == 0 then
-    GAMEMODE:EndRound("Mimics")
-  elseif CurTime() >= GetGlobalFloat("mh_round_ends") then
+  -- In dev single-player mode, skip empty-team win checks so you can test solo
+  local allow_single = mh_cvar_singleplayer and mh_cvar_singleplayer:GetBool() and (#player.GetAll() < 2)
+
+  if not allow_single then
+    if #mimics == 0 then
+      GAMEMODE:EndRound("Hunters")
+      return
+    elseif #hunters == 0 then
+      GAMEMODE:EndRound("Mimics")
+      return
+    end
+  end
+
+  if CurTime() >= GetGlobalFloat("mh_round_ends") then
     GAMEMODE:EndRound("Mimics") -- Mimics win if time runs out
   end
 end)
