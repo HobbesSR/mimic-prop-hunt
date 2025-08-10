@@ -1,3 +1,5 @@
+DeriveGamemode("sandbox")
+
 GM.Name    = "Mimic Hunt"
 GM.Author  = "You"
 TEAM_HUNTERS = 1
